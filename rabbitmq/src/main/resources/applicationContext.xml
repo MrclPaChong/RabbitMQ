@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     http://www.springframework.org/schema/rabbit
+     http://www.springframework.org/schema/rabbit/spring-rabbit-1.2.xsd">
+
+    <!--第一连接工厂-->
+    <rabbit:connection-factory id="cachingConnectionFactory" host="127.0.0.1" username="test" password="test"  virtual-host="/test"></rabbit:connection-factory>
+    <!--定义RabbitMQ模板
+    queue="" 如果发送到队列写队列
+    exchange="" 如果发送到交换机写交换机
+    routing-key="" 定义路由的关键字
+    -->
+    <rabbit:template id="template" connection-factory="cachingConnectionFactory" exchange="fanoutExchange" ></rabbit:template>
+    <rabbit:admin connection-factory="cachingConnectionFactory"></rabbit:admin>
+        <!--消息发送队列还是交换机-->
+        <!--定义队列-->
+        <rabbit:queue name="myQueue" auto-declare="true"></rabbit:queue>
+        <!--定于交换机-->
+    <rabbit:fanout-exchange name="fanoutExchange" auto-declare="true">
+        <!--将队列绑定到交换机-->
+        <rabbit:bindings>
+            <rabbit:binding queue="myQueue">
+
+            </rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+
+    <!--定义消费者-->
+    <bean id="consumer" class="com.weirdo.spring.MyConsumer"></bean>
+
+    <!--定义监听器，当收到消息的时候会执行内部配置-->
+    <rabbit:listener-container connection-factory="cachingConnectionFactory">
+       <!--定义哪个类里面的什么方法用于处理收到的消息-->
+        <rabbit:listener ref="consumer" method="tets" queue-names="myQueue"></rabbit:listener>
+    </rabbit:listener-container>
+
+
+  <!--  &lt;!&ndash;定义路由模式&ndash;&gt;
+    <rabbit:direct-exchange name="directExchange" durable="true" auto-delete="false">
+        <rabbit:bindings>
+            <rabbit:binding queue="myQueue" key="key1"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:direct-exchange>
+
+    &lt;!&ndash;定义通配符模式&ndash;&gt;
+    <rabbit:topic-exchange name="topicExchange" durable="true" auto-delete="false">
+        <rabbit:bindings>
+            <rabbit:binding pattern="key.*" queue="myQueue"></rabbit:binding>
+            <rabbit:binding pattern="key.#" queue="myQueue"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>-->
+
+</beans>
